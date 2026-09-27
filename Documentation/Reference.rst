@@ -163,6 +163,9 @@ All messages live in ``Resources/Private/Language/locallang.xlf``:
      - Mailman did not accept the address
    * - ``error.mailFailed``
      - The confirmation mail could not be sent
+   * - ``error.missingSender``
+     - ``mode = email`` with ``emailCommand = request`` and no valid
+       ``emailSender`` to send the command mail from
    * - ``error.unknown``
      - Anything else
 

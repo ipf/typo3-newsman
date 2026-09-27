@@ -38,7 +38,7 @@ constructor injection; the extension does not use `GeneralUtility::makeInstance(
 
 | Key | Default | Purpose |
 | --- | --- | --- |
-| `mode` | `rest` | `rest` = Mailman 3 REST API, `email` = Mailman 2 style confirmation mail |
+| `mode` | `rest` | `rest` = Mailman 3 REST API, `email` = Mailman 2 style command mail |
 | `apiUrl` | `''` | Base URL of the REST API, e.g. `https://mailman.example.com/3.0` |
 | `apiUser` | `''` | REST user (needs the Mailman admin role) |
 | `apiPassword` | `''` | Password for `apiUser` |
@@ -46,6 +46,8 @@ constructor injection; the extension does not use `GeneralUtility::makeInstance(
 | `verifySsl` | `1` | TLS certificate validation |
 | `timeout` | `10` | HTTP timeout in seconds |
 | `emailDomain` | `''` | Only for `mode = email`: the list domain, e.g. `example.com` |
+| `emailCommand` | `subscribe` | Only for `mode = email`: `subscribe` or `request`, see below |
+| `emailSender` | `''` | Only for `mode = email` with `emailCommand = request`: the sender of the command mail |
 
 Read the values from the environment so nothing secret ends up in the
 repository:
@@ -62,6 +64,8 @@ repository:
         'verifySsl' => getenv('MAILMAN_VERIFY_SSL') !== 'false',
         'timeout' => (int)(getenv('MAILMAN_TIMEOUT') ?: 10),
         'emailDomain' => getenv('MAILMAN_EMAIL_DOMAIN') ?: '',
+        'emailCommand' => getenv('MAILMAN_EMAIL_COMMAND') ?: 'subscribe',
+        'emailSender' => getenv('MAILMAN_EMAIL_SENDER') ?: '',
     ],
 ],
 ```
@@ -83,6 +87,8 @@ FlexForm settings:
 | --- | --- |
 | `list` | The mailing list, e.g. `newsletter@example.com` |
 | `successMessage` | Optional text shown instead of the default success message |
+| `emailCommand` | Overrides `emailCommand` for this element (`email` mode) |
+| `emailSender` | Overrides `emailSender` for this element (`email` mode) |
 | `emailLabel` | Text of the field label |
 | `emailPlaceholder` | Placeholder of the input |
 | `buttonLabel` | Text of the submit button |
@@ -91,6 +97,24 @@ The three form texts are plain texts rather than labels, because the site brings
 its own wording. Both the posting address (`newsletter@example.com`) and
 Mailman's list id (`newsletter.example.com`, optionally prefixed with `list:`)
 are accepted.
+
+### Mailman 2 (mode `email`)
+
+Mailman 2 has no REST API, so `mode = email` subscribes by sending one command
+mail; the list server then mails the visitor a confirmation the extension never
+sees. `emailCommand` picks how that mail is addressed:
+
+| `emailCommand` | Mail | Note |
+| --- | --- | --- |
+| `subscribe` (default) | to `<list>-subscribe@<domain>`, address in the `From:` header | Fails SPF/DMARC at most hosted list servers, because the mail claims to come from the visitor while it comes from the web host |
+| `request` | to `<list>-request@<domain>`, body `subscribe <address>`, sender `emailSender` | The address travels in the body, so the mail passes those checks. Needs a valid `emailSender` |
+
+`request` requires `emailSender`, because that mail is sent on behalf of the
+site and the list server answers the site operator, not the visitor. Without it
+the form reports "the sender of the command email is not configured" rather than
+sending a mail that would only be rejected. Both settings can be overridden per
+element, so one site can mix them; an empty FlexForm field means the global
+value applies.
 
 ### Styling
 
@@ -178,6 +202,8 @@ ever rendered inside a page.
 | Unknown list | Points the editor at the list configuration |
 | No REST API at `apiUrl` | Points the operator at `apiUrl`, not at the list |
 | `apiUrl` empty | "not configured" hint |
+| `email` mode | Command mail sent, visitor confirms with the list server |
+| `email` mode, `request` without a sender | "sender not configured" hint, no mail sent |
 
 Mailman's REST API expects the `pre_*` flags as **strings**; real JSON booleans
 make its validator throw a 500 (`lazr.config` calls `->lower()` on them). The

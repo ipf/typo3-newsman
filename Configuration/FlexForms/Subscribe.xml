@@ -29,6 +29,45 @@
                             </config>
                         </TCEforms>
                     </settings.successMessage>
+                    <!-- Overrides of the extension settings, for the email mode
+                         only. The first option of the select is the global value,
+                         which is why it carries no value of its own. -->
+                    <settings.emailCommand>
+                        <TCEforms>
+                            <label>LLL:EXT:newsman/Resources/Private/Language/locallang.xlf:flexform.emailCommand</label>
+                            <config>
+                                <type>select</type>
+                                <items>
+                                    <item>
+                                        <label>LLL:EXT:newsman/Resources/Private/Language/locallang.xlf:flexform.emailCommand.inherit</label>
+                                        <!-- An explicit empty value, so the field
+                                             saves as '' instead of the index 0,
+                                             which the controller reads as
+                                             "inherit" as well but by accident. -->
+                                        <value></value>
+                                    </item>
+                                    <item>
+                                        <label>LLL:EXT:newsman/Resources/Private/Language/locallang.xlf:flexform.emailCommand.subscribe</label>
+                                        <value>subscribe</value>
+                                    </item>
+                                    <item>
+                                        <label>LLL:EXT:newsman/Resources/Private/Language/locallang.xlf:flexform.emailCommand.request</label>
+                                        <value>request</value>
+                                    </item>
+                                </items>
+                            </config>
+                        </TCEforms>
+                    </settings.emailCommand>
+                    <settings.emailSender>
+                        <TCEforms>
+                            <label>LLL:EXT:newsman/Resources/Private/Language/locallang.xlf:flexform.emailSender</label>
+                            <config>
+                                <type>input</type>
+                                <size>40</size>
+                                <placeholder>newsman@example.com</placeholder>
+                            </config>
+                        </TCEforms>
+                    </settings.emailSender>
                     <!-- The texts of the form. A site shows the block of its
                          own mail service, whose texts are not part of the public
                          API, so they are settings of the element. -->

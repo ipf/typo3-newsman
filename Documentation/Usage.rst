@@ -12,6 +12,8 @@ Create a content element in the page and choose **Newsman Subscribe**
 itself, so no TypoScript or TypoScript object needs to be copied into the site
 package.
 
+.. _usage-flexform:
+
 FlexForm settings
 =================
 
@@ -26,6 +28,13 @@ FlexForm settings
    * - ``successMessage``
      - Text shown instead of the default success message. A label key
        (``LLL:EXT:newsman/...:success.default``) is also accepted and translated
+   * - ``emailCommand``
+     - Overrides the ``emailCommand`` setting for this element, ``subscribe`` or
+       ``request``. Only used by ``mode = email``; the first option means "from
+       the extension settings"
+   * - ``emailSender``
+     - Overrides the ``emailSender`` setting for this element. Only used by
+       ``mode = email`` together with ``request``
    * - ``emailLabel``
      - Text of the field label
    * - ``emailPlaceholder``
@@ -34,7 +43,10 @@ FlexForm settings
      - Text of the submit button
 
 The three form texts are plain texts rather than labels, because the site
-brings its own wording.
+brings its own wording. The two command settings are overrides rather than
+requirements: an empty field falls back to the value from
+:ref:`configuration-email-mode`, so a site configures them once and only the
+elements that need something else touch them.
 
 Behaviour of the form
 =====================

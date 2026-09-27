@@ -18,6 +18,21 @@ class MailmanService
     public const MODE_REST = 'rest';
     public const MODE_EMAIL = 'email';
 
+    /**
+     * Mail to <list>-subscribe@<domain> and let Mailman read the address from the
+     * From: header. The default, because it is what the mode has always done.
+     */
+    public const EMAIL_COMMAND_SUBSCRIBE = 'subscribe';
+
+    /**
+     * Mail "subscribe <address>" to <list>-request@<domain> instead. The list
+     * server then learns the address from the body rather than from the header,
+     * which is the point: in the other mode the mail claims to come from the
+     * visitor while actually coming from the web host, and that fails SPF/DMARC
+     * at most hosted list servers.
+     */
+    public const EMAIL_COMMAND_REQUEST = 'request';
+
     protected string $mode;
     protected string $apiUrl;
     protected string $apiUser;
@@ -26,6 +41,8 @@ class MailmanService
     protected bool $verifySsl;
     protected int $timeout;
     protected string $emailDomain;
+    protected string $emailCommand;
+    protected string $emailSender;
 
     /**
      * ExtensionConfiguration is registered as a service and carries an alias, so
@@ -47,13 +64,29 @@ class MailmanService
         $this->verifySsl = !in_array((string)($configuration['verifySsl'] ?? '1'), ['0', '', 'false'], true);
         $this->timeout = (int)($configuration['timeout'] ?? 10);
         $this->emailDomain = trim((string)($configuration['emailDomain'] ?? ''), '@');
+
+        $this->emailCommand = $this->normalizeEmailCommand(
+            (string)($configuration['emailCommand'] ?? self::EMAIL_COMMAND_SUBSCRIBE)
+        );
+        $this->emailSender = trim((string)($configuration['emailSender'] ?? ''));
     }
 
     /**
      * Subscribe an address to a list. Returns ['success' => bool, 'message' => string].
+     *
+     * The two email arguments override the global setting for this call only, so
+     * a content element can send its command differently from the rest of the
+     * site. null means "use the configured value", which is what an untouched
+     * FlexForm field sends.
+     *
+     * @param string|null $emailCommand One of the EMAIL_COMMAND_* constants
      */
-    public function subscribe(string $email, string $listId): array
-    {
+    public function subscribe(
+        string $email,
+        string $listId,
+        ?string $emailCommand = null,
+        ?string $emailSender = null
+    ): array {
         $email = trim($email);
         $listId = trim($listId);
 
@@ -64,9 +97,16 @@ class MailmanService
             return ['success' => false, 'messageKey' => 'error.missingList'];
         }
 
-        return $this->mode === self::MODE_EMAIL
-            ? $this->subscribeViaEmail($email, $listId)
-            : $this->subscribeViaRest($email, $listId);
+        if ($this->mode !== self::MODE_EMAIL) {
+            return $this->subscribeViaRest($email, $listId);
+        }
+
+        return $this->subscribeViaEmail(
+            $email,
+            $listId,
+            $emailCommand === null ? $this->emailCommand : $this->normalizeEmailCommand($emailCommand),
+            $emailSender === null ? $this->emailSender : trim($emailSender)
+        );
     }
 
     /**
@@ -187,10 +227,29 @@ class MailmanService
     }
 
     /**
-     * Mailman 2 style confirmation: mail <list>-subscribe@<domain>
+     * Mailman 2 style confirmation, sent as a command mail.
+     *
+     * Two shapes, both supported by Mailman 2, both of which end in the list
+     * server mailing the visitor a confirmation:
+     *
+     * - EMAIL_COMMAND_SUBSCRIBE mails <list>-subscribe@<domain> and the address
+     *   travels in the From: header.
+     * - EMAIL_COMMAND_REQUEST mails "subscribe <address>" to
+     *   <list>-request@<domain>, with emailSender as the sender. The address then
+     *   travels in the body, so the mail no longer claims to come from the
+     *   visitor while it comes from the web host - which is what makes it pass
+     *   SPF/DMARC at a hosted list server.
+     *
+     * Either way the answer is only "the mail was handed to the MTA". Whether
+     * Mailman accepted it is decided by the confirmation mail, which the
+     * extension never sees.
      */
-    protected function subscribeViaEmail(string $email, string $listId): array
-    {
+    protected function subscribeViaEmail(
+        string $email,
+        string $listId,
+        string $command,
+        string $sender
+    ): array {
         $domain = $this->emailDomain;
         if ($domain === '' && str_contains($listId, '@')) {
             [$listId, $domain] = explode('@', $listId, 2);
@@ -199,18 +258,48 @@ class MailmanService
             return ['success' => false, 'messageKey' => 'error.notConfigured'];
         }
 
-        $recipient = $listId . '-subscribe@' . $domain;
+        if ($command === self::EMAIL_COMMAND_REQUEST) {
+            // The request address is a general command inbox, so a valid sender
+            // is required: the mail is sent on behalf of the site, and the list
+            // server answers the site, not the visitor.
+            if (!filter_var($sender, FILTER_VALIDATE_EMAIL)) {
+                return ['success' => false, 'messageKey' => 'error.missingSender'];
+            }
+
+            $recipient = $listId . '-request@' . $domain;
+            $body = 'subscribe ' . $email . "\n";
+            $from = $sender;
+        } else {
+            $recipient = $listId . '-subscribe@' . $domain;
+            $body = "subscribe\n";
+            $from = $email;
+        }
+
         $headers = implode("\r\n", [
-            'From: ' . $email,
-            'Reply-To: ' . $email,
+            'From: ' . $from,
+            'Reply-To: ' . $from,
             'Content-Type: text/plain; charset=utf-8',
         ]);
 
-        $sent = @mail($recipient, '', "subscribe\n", $headers, "-f{$email}");
+        $sent = @mail($recipient, '', $body, $headers, "-f{$from}");
 
         return $sent
             ? ['success' => true, 'pending' => true]
             : ['success' => false, 'messageKey' => 'error.mailFailed'];
+    }
+
+    /**
+     * Anything that is not one of the two known commands is treated as the
+     * default rather than sent on: a typo in a FlexForm field must not turn into
+     * a command the list server does not know.
+     */
+    protected function normalizeEmailCommand(string $command): string
+    {
+        $command = strtolower(trim($command));
+
+        return in_array($command, [self::EMAIL_COMMAND_SUBSCRIBE, self::EMAIL_COMMAND_REQUEST], true)
+            ? $command
+            : self::EMAIL_COMMAND_SUBSCRIBE;
     }
 
     protected function extractDetail(string $response): string

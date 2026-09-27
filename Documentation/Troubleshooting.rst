@@ -59,9 +59,37 @@ application and it has no REST API at all, so ``/3.0/members`` does not exist.
   does not allow.
 * Check the URL: ``apiUrl`` is the base of the API, ``https://host/3.0``, not
   the address of the list page.
-* For a Mailman 2 host, switch to ``mode = email``. It sends the confirmation
-  mail to ``<list>-subscribe@<domain>`` instead, and the visitor confirms with
-  the list server itself; see :ref:`configuration-modes`.
+* For a Mailman 2 host, switch to ``mode = email``. It sends a command mail to
+  the list server instead, and the visitor confirms with the list server itself;
+  see :ref:`configuration-email-mode`.
+
+The command mail is not delivered
+===============================
+
+``mode = email`` hands one mail to the MTA and stops there; everything after that
+belongs to the list server, so the form cannot tell a delivered mail from a
+rejected one. The visitor is told to look out for a confirmation, and if none
+arrives, check on the list server.
+
+The usual cause is SPF/DMARC. With ``emailCommand = subscribe`` the mail claims
+to come from the visitor while it comes from the web host, which fails those
+checks at most hosted list servers. Switch to ``emailCommand = request`` and set
+``emailSender`` to an address of the web host: the address then travels in the
+body of the mail to ``<list>-request@<domain>`` and the sender is the site. See
+:ref:`configuration-email-mode`.
+
+Other things to check:
+
+* ``mail()`` is PHP's own mailer, so the host needs a working MTA. A web host
+  without one reports ``error.mailFailed`` right away, while a host with a
+  silently broken one reports success and nothing arrives.
+* ``emailDomain`` is empty and the list in the FlexForm has no ``@``, so the
+  domain cannot be derived. That is ``error.notConfigured``.
+* The list server answers the confirmation to the address in the command, so a
+  list with *confirmation and approval* needs a moderator to accept the
+  subscription afterwards. Nothing in the form shows or stores that state.
+
+See :ref:`configuration-email-mode` for the two command shapes.
 
 Mailman is not reachable
 ========================

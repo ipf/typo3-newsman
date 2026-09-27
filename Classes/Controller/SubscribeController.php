@@ -29,7 +29,14 @@ class SubscribeController extends ActionController
             return $this->htmlResponse();
         }
 
-        $result = $this->mailmanService->subscribe($email, $listId);
+        $result = $this->mailmanService->subscribe(
+            $email,
+            $listId,
+            // null means "use the global setting", which is what an untouched
+            // FlexForm field holds.
+            $this->flexformString('emailCommand') ?: null,
+            $this->flexformString('emailSender') ?: null
+        );
 
         if ($result['success']) {
             $this->view->assignMultiple([
@@ -48,6 +55,18 @@ class SubscribeController extends ActionController
         }
 
         return $this->htmlResponse();
+    }
+
+    /**
+     * A FlexForm field as a trimmed string. FlexForm values are always strings,
+     * but a field that was never saved is absent, and a select that still holds
+     * its first option arrives as that option.
+     */
+    protected function flexformString(string $key): string
+    {
+        $value = $this->settings[$key] ?? '';
+
+        return is_string($value) ? trim($value) : '';
     }
 
     /**

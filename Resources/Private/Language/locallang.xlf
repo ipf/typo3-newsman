@@ -59,6 +59,9 @@
             <trans-unit id="error.mailFailed">
                 <source>The confirmation email could not be sent. Please try again later.</source>
             </trans-unit>
+            <trans-unit id="error.missingSender">
+                <source>The sender of the command email is not configured. Please contact the site operator.</source>
+            </trans-unit>
 
             <trans-unit id="flexform.sheet_general">
                 <source>General</source>
@@ -68,6 +71,21 @@
             </trans-unit>
             <trans-unit id="flexform.successMessage">
                 <source>Success message</source>
+            </trans-unit>
+            <trans-unit id="flexform.emailCommand">
+                <source>Command mail (email mode only)</source>
+            </trans-unit>
+            <trans-unit id="flexform.emailCommand.inherit">
+                <source>From the extension settings</source>
+            </trans-unit>
+            <trans-unit id="flexform.emailCommand.subscribe">
+                <source>Subscribe address: &lt;list&gt;-subscribe@&lt;domain&gt;</source>
+            </trans-unit>
+            <trans-unit id="flexform.emailCommand.request">
+                <source>Request address: &lt;list&gt;-request@&lt;domain&gt;</source>
+            </trans-unit>
+            <trans-unit id="flexform.emailSender">
+                <source>Sender of the command mail (email mode, "request" only)</source>
             </trans-unit>
             <trans-unit id="flexform.emailLabel">
                 <source>Label of the email field</source>

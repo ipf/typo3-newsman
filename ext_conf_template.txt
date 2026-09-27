@@ -31,3 +31,18 @@ timeout = 10
 
 # Only for mode = email: the list domain, e.g. example.com
 emailDomain =
+
+# Only for mode = email: how the command mail is addressed.
+#
+# subscribe (default) mails <list>-subscribe@<domain> and puts the visitor into
+#   the From: header. That mail claims to come from the visitor while it comes
+#   from the web host, so it fails SPF/DMARC at most hosted list servers.
+# request mails "subscribe <address>" to <list>-request@<domain> and needs
+#   emailSender below. The address travels in the body, so the mail passes those
+#   checks - use this for a list server you do not run yourself.
+emailCommand = subscribe
+
+# Only for mode = email with emailCommand = request: the address the command mail
+# is sent from, i.e. the site operator. It must be a valid mail address and should
+# be one of the web host, or the list server will reject the mail as spoofed.
+emailSender =

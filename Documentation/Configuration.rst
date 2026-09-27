@@ -30,8 +30,8 @@ Settings
      - Purpose
    * - ``mode``
      - ``rest``
-     - ``rest`` = Mailman 3 REST API, ``email`` = Mailman 2 style
-       confirmation mail to ``<list>-subscribe@<domain>``
+     - ``rest`` = Mailman 3 REST API, ``email`` = Mailman 2 style command mail
+       (see :ref:`configuration-email-mode`)
    * - ``apiUrl``
      - ``''``
      - Base URL of the REST API, e.g. ``https://mailman.example.com/3.0``
@@ -53,6 +53,55 @@ Settings
    * - ``emailDomain``
      - ``''``
      - Only for ``mode = email``: the list domain, e.g. ``example.com``
+   * - ``emailCommand``
+     - ``subscribe``
+     - Only for ``mode = email``: how the command mail is addressed,
+       ``subscribe`` or ``request``
+   * - ``emailSender``
+     - ``''``
+     - Only for ``mode = email`` with ``emailCommand = request``: the address the
+       command mail is sent from
+
+.. _configuration-email-mode:
+
+The email mode
+==============
+
+``mode = email`` is how a Mailman 2 list is subscribed, because Mailman 2 has no
+REST API. The extension sends one command mail and the list server takes it from
+there: it answers the visitor with a confirmation mail that the extension never
+sees. Both shapes below are part of Mailman 2 and end in that same confirmation.
+
+.. list-table::
+   :header-rows: 1
+   :widths: 15 45 40
+
+   * - ``emailCommand``
+     - Mail
+     - Note
+   * - ``subscribe``
+     - To ``<list>-subscribe@<domain>``, the address in the ``From:`` header
+     - The default, and the one that has always been sent. The mail claims to
+       come from the visitor while it actually comes from the web host, so it
+       fails SPF/DMARC at most hosted list servers
+   * - ``request``
+     - To ``<list>-request@<domain>``, the body is ``subscribe <address>`` and
+       the sender is ``emailSender``
+     - The address travels in the body instead of the header, which is what makes
+       the mail pass those checks. Use it for a list server you do not run
+       yourself
+
+``request`` requires a valid ``emailSender``, because that mail is sent on behalf
+of the site: the list server answers the site operator, not the visitor. Without
+it the form reports ``error.missingSender`` instead of sending a mail that would
+only be rejected. The sender should be an address of the web host, for the same
+reason.
+
+Both settings can be overridden per content element in the FlexForm
+(``emailCommand``, ``emailSender``), so one site can mix them; see
+:ref:`usage-flexform`. A value that is not one of the two commands falls back to
+``subscribe`` rather than being sent on: a typo must not become a command the
+list server does not know.
 
 .. _configuration-settings-php:
 
@@ -76,6 +125,8 @@ repository:
                'verifySsl' => getenv('MAILMAN_VERIFY_SSL') !== 'false',
                'timeout' => (int) (getenv('MAILMAN_TIMEOUT') ?: 10),
                'emailDomain' => getenv('MAILMAN_EMAIL_DOMAIN') ?: '',
+               'emailCommand' => getenv('MAILMAN_EMAIL_COMMAND') ?: 'subscribe',
+               'emailSender' => getenv('MAILMAN_EMAIL_SENDER') ?: '',
            ],
        ],
    ];
