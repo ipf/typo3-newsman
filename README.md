@@ -184,71 +184,54 @@ service sends them quoted for that reason.
 
 ## Local development with DDEV
 
-This section is optional and describes a setup that is **not** part of the
-extension: the package ships no `.ddev` configuration and no custom commands.
-It is kept as a recipe for running a Mailman 3 core locally, which is useful
-while developing against the form. A Mailman 3 core then runs as a DDEV add-on
-container (`mailman/mailman` plus the `mailman-web` image for Postorius), so
-nothing has to be installed on the host:
+Optional: a local GNU Mailman 3 core and its admin interface run as DDEV
+services, so the form can be developed and tested without a hosted instance.
+The extension ships them as a DDEV add-on in [`ddev/`](ddev/README.md), which is
+installed from the project:
 
 ```bash
+ddev add-on get vendor/ipf/newsman/ddev
 ddev start
-ddev newsman setup newsletter@example.test
 ```
 
-The `ddev newsman` commands below are custom DDEV commands of such a setup;
-their names are examples, adapt them to your own environment.
+The add-on writes `.ddev/.env.web.newsman` (the settings the web container
+reads, `apiUrl` = `http://mailman:8001/3.0`) and `.ddev/.env.newsman` (the
+credentials of the two services), so nothing has to be configured by hand.
+`ddev add-on remove newsman` takes it away again.
 
-| Command | Purpose |
-| --- | --- |
-| `ddev newsman setup [list]` | Create mail domain and list, print the configuration |
-| `ddev newsman list` | List the mailing lists |
-| `ddev newsman members [list]` | Show the subscribers |
-| `ddev newsman test [list]` | Subscribe a throwaway address |
-| `ddev newsman clean [list]` | Remove the throwaway subscribers again |
-| `ddev newsman admin` | Enable the Postorius login and print its URL |
-| `ddev newsman info` | Versions of core and Postorius |
-| `ddev newsman logs [service]` | Container logs, `mailman` or `postorius` |
+`ddev describe` then shows both services with their URLs and credentials:
 
-`ddev newsman clean` only removes addresses on the test domain (`example.test`, set
-`NEWSMAN_TEST_DOMAIN` to change it) and prints what it kept, so real subscribers
-are never removed by accident.
+| Service | URL from the host | Credentials |
+| --- | --- | --- |
+| `mailman` | `https://<project>.ddev.site:8028/3.0` | `restadmin` / `restpass` |
+| `postorius` | `https://<project>.ddev.site:8030` | `admin` / `admin` |
 
-Inside DDEV the web container reaches the API at `http://mailman:8001/3.0`,
-which is what `MAILMAN_API_URL` in the DDEV `config.yaml` sets. On the host the API
-is published by ddev-router on `https://example.ddev.site:8028` (`MAILMAN_HTTPD`
-for plain HTTP, default 8027); because the router routes by hostname, requests
-to `localhost` have to carry the `Host` header, which the `ddev newsman`
-command does.
+`<project>` is the `name` from `.ddev/config.yaml`; ddev-router routes by
+hostname, so requests to `localhost` have to carry the `Host` header. Ports and
+credentials are changed in `.ddev/.env.newsman`, and
+[`ddev/README.md`](ddev/README.md) has the steps that create the mail domain,
+the list and the Postorius password.
 
 ### Admin interface (Postorius)
 
 Lists, members, moderation and settings are managed in Postorius, Mailman 3's
-web interface, which runs as a second container:
+web interface, which runs as the second container:
 
-```bash
-ddev start
-ddev newsman admin          # sets the password, prints the URL
-```
-
-* <http://example.ddev.site:8029> (or `https://example.ddev.site:8030`)
+* <http://<project>.ddev.site:8029> (or `https://<project>.ddev.site:8030`)
 * user `admin`, password `admin` (`POSTORIUS_ADMIN_USER` / `POSTORIUS_ADMIN_PASSWORD`)
 
 HyperKitty, the web archive of sent messages, is not part of this image.
 
-Three things about that container are worth knowing, because the image is built
+Two things about that container are worth knowing, because the image is built
 to run behind a reverse proxy:
 
 - It contains neither nginx nor WhiteNoise, so it cannot serve `/static` on its
-  own. The compose file therefore runs Django's development server with `DEBUG`
-  from a local settings module next to it. Use a real reverse proxy (that is what
-  the `maxking/mailman-web` image adds) for anything but local use.
+  own. The compose file therefore runs Django's development server with the
+  `DEBUG` from `ddev/newsman/settings_local.py`. Use a real reverse proxy (that
+  is what the `maxking/mailman-web` image adds) for anything but local use.
 - Its `settings.py` calls `gethostbyname("mailman-web")` while building
   `ALLOWED_HOSTS`, so the container needs that network alias or Django dies on
   import before reading any environment variable.
-- `createsuperuser --noinput` leaves the account without a password, and allauth
-  additionally expects an `EmailAddress` record. Without both, the first login
-  ends in a 500. `ddev newsman admin` sets them, and is safe to re-run.
 
 ## Security
 

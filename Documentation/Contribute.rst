@@ -16,7 +16,8 @@ Workflow
       vendor/bin/phpunit -c Build/phpunit.xml
 
 #. For an end-to-end check, use the DDEV setup of :ref:`deployment-ddev`:
-   ``ddev start`` and ``ddev newsman test <list>``.
+   ``ddev start`` and then subscribe a throwaway address with the ``curl`` call
+   from ``ddev/README.md``.
 #. Open a pull request that describes the behaviour change and references the
    issue.
 

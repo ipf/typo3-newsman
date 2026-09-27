@@ -1,0 +1,183 @@
+#ddev-generated
+# GNU Mailman 3 core for local testing of the newsman extension.
+#
+# Installed by the "newsman" add-on of this package, see ddev/README.md.
+#
+# Inside DDEV the container is reachable as http://mailman:8001/3.0 from the web
+# container, and that is the value for the extension configuration's `apiUrl`.
+#
+# On the host the REST API is published by ddev-router through HTTP_EXPOSE /
+# HTTPS_EXPOSE instead of a `ports:` mapping, so ddev-router owns the host side
+# and the ports cannot collide with a locally bound one:
+#
+#   https://<project>.ddev.site:8028/3.0   (MAILMAN_HTTPS_PORT, default 8028)
+#   http://<project>.ddev.site:8027/3.0    (MAILMAN_HTTPD, default 8027)
+#
+# 8027/8028 are free by default; Mailpit uses 8025/8026. Move them by setting the
+# variables in .ddev/.env.newsman before `ddev start`.
+#
+# ddev-router routes by hostname, so requests have to carry the project hostname:
+# use https://<project>.ddev.site:8028, or add "Host: <project>.ddev.site" when
+# calling http://localhost:8027 directly. The curl calls in ddev/README.md send
+# that header.
+#
+# SQLite is used on purpose: this is a throwaway dev instance, so there is no
+# extra database service to keep in sync. Production points `apiUrl` at the
+# real (hosted) Mailman instance instead.
+#
+# Start: ddev start, then create a mail domain and a list - the commands are in
+# ddev/README.md. `ddev describe` shows the URLs and the credentials of both
+# services (the x-ddev blocks below), so nobody has to read this file.
+services:
+  mailman:
+    container_name: ddev-${DDEV_SITENAME}-mailman
+    hostname: mailman
+    image: ${MAILMAN_IMAGE:-maxking/mailman-core:latest}
+    restart: "no"
+    labels:
+      com.ddev.site-name: ${DDEV_SITENAME}
+      com.ddev.approot: $DDEV_APPROOT
+    environment:
+      - TZ=${TZ:-UTC}
+      # ddev-router publishes the REST API on the host via these, see the header.
+      - VIRTUAL_HOST=$DDEV_HOSTNAME
+      - HTTP_EXPOSE=${MAILMAN_HTTPD:-8027}:8001
+      - HTTPS_EXPOSE=${MAILMAN_HTTPS_PORT:-8028}:8001
+      # gunicorn binds the address that MM_HOSTNAME resolves to at startup. The
+      # container is attached to two networks and the first answer can be the
+      # one the web container cannot reach (it only shares the DDEV network), so
+      # binding is pinned to all interfaces. "mailman" would bind a single,
+      # possibly unreachable IP.
+      - MM_HOSTNAME=0.0.0.0
+      - MAILMAN_REST_PORT=8001
+      # Credentials created by the entrypoint and expected by the extension.
+      - MAILMAN_REST_USER=${MAILMAN_REST_USER:-restadmin}
+      - MAILMAN_REST_PASSWORD=${MAILMAN_REST_PASSWORD:-restpass}
+      # Deliver outgoing mail to Mailpit instead of trying real SMTP.
+      - SMTP_HOST=mailpit
+      - SMTP_PORT=1025
+    volumes:
+      - "mailman:/opt/mailman/var"
+      - ".:/mnt/ddev_config"
+    # `ddev describe` shows these, so the credentials do not have to be looked up
+    # in this file. They are development credentials; override them in
+    # .ddev/.env.newsman when they should differ.
+    x-ddev:
+      describe-url-port: "https://${DDEV_HOSTNAME}:${MAILMAN_HTTPS_PORT:-8028}/3.0"
+      describe-info: |
+        REST user: ${MAILMAN_REST_USER:-restadmin}
+        REST password: ${MAILMAN_REST_PASSWORD:-restpass}
+        In the web container: http://mailman:8001/3.0
+    # Mailman is not a dependency of the web container, so nothing waits for it:
+    # poll the REST API yourself before configuring a list, see ddev/README.md.
+    # gunicorn binds to the container IP (resolved from MM_HOSTNAME) rather than
+    # to 127.0.0.1, so the probe uses the hostname. 401 without credentials is a
+    # healthy answer.
+    healthcheck:
+      test: ["CMD", "python3", "/mnt/ddev_config/newsman/healthcheck.py"]
+      interval: 10s
+      timeout: 10s
+      retries: 30
+      start_period: 20s
+
+  # Postorius is the web interface of Mailman 3: the admin UI for lists, members,
+  # moderation and settings. It is a separate application from the core above and
+  # only talks to it through the REST API, which is why it needs its own Django
+  # database and SECRET_KEY.
+  #
+  # It does not include HyperKitty, so sent messages are not archived in a
+  # browser; that is deliberate, it keeps this a single extra container.
+  #
+  #   http://<project>.ddev.site:8029  (POSTORIUS_HTTPD, default 8029)
+  #   https://<project>.ddev.site:8030 (POSTORIUS_HTTPS_PORT, default 8030)
+  #
+  # Log in with the superuser below; its password has to be set before the first
+  # login, see ddev/README.md.
+  #
+  #   admin / admin  (POSTORIUS_ADMIN_USER / POSTORIUS_ADMIN_PASSWORD)
+  postorius:
+    container_name: ddev-${DDEV_SITENAME}-postorius
+    hostname: postorius
+    image: ${POSTORIUS_IMAGE:-maxking/postorius:latest}
+    restart: "no"
+    # The image default is "uwsgi --ini uwsgi.ini", which does not serve
+    # /static because the image has neither nginx nor WhiteNoise - those live in
+    # maxking/mailman-web, which also brings HyperKitty. Django's development
+    # server does serve static (with DEBUG from settings_local.py), which is what
+    # a local admin interface needs.
+    command: python3 manage.py runserver 0.0.0.0:8000 --noreload
+    labels:
+      com.ddev.site-name: ${DDEV_SITENAME}
+      com.ddev.approot: $DDEV_APPROOT
+    environment:
+      - TZ=${TZ:-UTC}
+      - VIRTUAL_HOST=$DDEV_HOSTNAME
+      - HTTP_EXPOSE=${POSTORIUS_HTTPD:-8029}:8000
+      - HTTPS_EXPOSE=${POSTORIUS_HTTPS_PORT:-8030}:8000
+      # Django refuses to start without this.
+      - SECRET_KEY=${POSTORIUS_SECRET_KEY:-ddev-postorius-dev-only-not-a-secret}
+      # Django compares the host without the port, so the bare project hostname is
+      # enough; the entrypoint also uses it to rename the default example.com
+      # domain, which keeps generated links pointing at this instance.
+      - SERVE_FROM_DOMAIN=$DDEV_HOSTNAME
+      - DJANGO_ALLOWED_HOSTS=$DDEV_HOSTNAME,localhost,127.0.0.1
+      # Talks to the core service above, by its compose service name. The image
+      # default is "mailman-core", which is not the name used here.
+      - MAILMAN_REST_URL=http://mailman:8001
+      - MAILMAN_REST_USER=${MAILMAN_REST_USER:-restadmin}
+      - MAILMAN_REST_PASSWORD=${MAILMAN_REST_PASSWORD:-restpass}
+      # Own SQLite database inside the data volume (four slashes = absolute path).
+      - DATABASE_URL=sqlite:////opt/mailman-web-data/mailmanweb.db
+      - DATABASE_TYPE=sqlite
+      # Outgoing mail to Mailpit, so Postorius invitations and notices are caught.
+      - SMTP_HOST=mailpit
+      - SMTP_PORT=1025
+      - SERVER_EMAIL=${POSTORIUS_ADMIN_EMAIL:-admin@example.test}
+      # The entrypoint creates the superuser but leaves the password unset, so it
+      # has to be set before anyone can log in, see ddev/README.md. The password
+      # is only kept as an environment variable, because the entrypoint does not
+      # accept one.
+      - MAILMAN_ADMIN_USER=${POSTORIUS_ADMIN_USER:-admin}
+      - MAILMAN_ADMIN_EMAIL=${POSTORIUS_ADMIN_EMAIL:-admin@example.test}
+      - POSTORIUS_ADMIN_USER=${POSTORIUS_ADMIN_USER:-admin}
+      - POSTORIUS_ADMIN_PASSWORD=${POSTORIUS_ADMIN_PASSWORD:-admin}
+      - LOG_TO_CONSOLE=yes
+      - POSTORIUS_TEMPLATE_BASE_URL=http://${DDEV_HOSTNAME}:${POSTORIUS_HTTPD:-8029}
+    volumes:
+      - "postorius:/opt/mailman-web-data"
+      # Read by the entrypoint, which copies it into /opt/mailman-web and then
+      # chowns the source - so this must not be mounted read-only, otherwise the
+      # entrypoint aborts on a read-only filesystem. See the file for why the
+      # development server is used.
+      - "./newsman/settings_local.py:/opt/mailman-web-data/settings_local.py"
+      - ".:/mnt/ddev_config"
+    networks:
+      default:
+        aliases:
+          # The image's settings.py calls gethostbyname("mailman-web") while it
+          # builds ALLOWED_HOSTS. Without an entry for that name Django dies with
+          # socket.gaierror on import, before any of the environment variables
+          # above are looked at. The alias satisfies it; settings_local.py could
+          # not, because the failure happens in settings.py itself.
+          - mailman-web
+    x-ddev:
+      describe-url-port: "https://${DDEV_HOSTNAME}:${POSTORIUS_HTTPS_PORT:-8030}"
+      describe-info: |
+        Admin user: ${POSTORIUS_ADMIN_USER:-admin}
+        Admin password: ${POSTORIUS_ADMIN_PASSWORD:-admin}
+        (set before the first login, see ddev/README.md)
+    # The first start runs collectstatic, compilemessages and migrate, which
+    # takes noticeably longer than later starts, so the budget is generous:
+    # `ddev start` fails outright if the container does not report healthy.
+    healthcheck:
+      test: ["CMD", "python3", "/mnt/ddev_config/newsman/postorius-healthcheck.py"]
+      interval: 10s
+      timeout: 10s
+      retries: 60
+      start_period: 180s
+
+volumes:
+  mailman:
+
+  # Postorius keeps its Django database, logs and uploaded files here.
+  postorius:
