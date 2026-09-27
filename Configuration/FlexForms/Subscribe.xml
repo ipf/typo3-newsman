@@ -29,9 +29,9 @@
                             </config>
                         </TCEforms>
                     </settings.successMessage>
-                    <!-- The texts of the form. The live site shows the block of
-                         its own mail service, whose texts are not part of the
-                         public API, so they are settings of the element. -->
+                    <!-- The texts of the form. A site shows the block of its
+                         own mail service, whose texts are not part of the public
+                         API, so they are settings of the element. -->
                     <settings.emailLabel>
                         <TCEforms>
                             <label>LLL:EXT:newsman/Resources/Private/Language/locallang.xlf:flexform.emailLabel</label>

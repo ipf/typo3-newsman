@@ -34,14 +34,20 @@ Security notes
 Local development with DDEV
 ==========================
 
-A Mailman 3 core runs as a DDEV add-on container (see
-``.ddev/docker-compose.mailman.yaml``), so nothing has to be installed on the
-host:
+This section is optional and describes a setup that is **not** part of the
+extension: the package ships no ``.ddev`` configuration and no custom commands.
+It is kept as a recipe for running a Mailman 3 core locally, which is useful
+while developing against the form. A Mailman 3 core then runs as a DDEV add-on
+container (``mailman/mailman`` plus the ``mailman-web`` image for Postorius),
+so nothing has to be installed on the host:
 
 .. code-block:: bash
 
    ddev start
-   ddev newsman setup newsletter@fowi.test
+   ddev newsman setup newsletter@example.test
+
+The ``ddev newsman`` commands below are custom DDEV commands of such a setup;
+their names are examples, adapt them to your own environment.
 
 .. list-table::
    :header-rows: 1
@@ -66,13 +72,13 @@ host:
    * - ``ddev newsman logs [service]``
      - Container logs, ``mailman`` or ``postorius``
 
-``ddev newsman clean`` only removes addresses on the test domain (``fowi.test``,
+``ddev newsman clean`` only removes addresses on the test domain (``example.test``,
 set ``NEWSMAN_TEST_DOMAIN`` to change it) and prints what it kept, so real
 subscribers are never removed by accident.
 
 Inside DDEV the web container reaches the API at ``http://mailman:8001/3.0``,
-which is what ``MAILMAN_API_URL`` in ``.ddev/config.yaml`` sets. On the host the
-API is published by ddev-router on ``https://fowi.ddev.site:8028``
+which is what ``MAILMAN_API_URL`` in the DDEV ``config.yaml`` sets. On the host
+the API is published by ddev-router on ``https://example.ddev.site:8028``
 (``MAILMAN_HTTPD`` for plain HTTP, default 8027); because the router routes by
 hostname, requests to ``localhost`` have to carry the ``Host`` header, which the
 ``ddev newsman`` command does.
@@ -88,7 +94,7 @@ web interface, which runs as a second container:
    ddev start
    ddev newsman admin          # sets the password, prints the URL
 
-* http://fowi.ddev.site:8029 (or ``https://fowi.ddev.site:8030``)
+* http://example.ddev.site:8029 (or ``https://example.ddev.site:8030``)
 * user ``admin``, password ``admin`` (``POSTORIUS_ADMIN_USER`` /
   ``POSTORIUS_ADMIN_PASSWORD``)
 
@@ -99,7 +105,7 @@ to run behind a reverse proxy:
 
 * It contains neither nginx nor WhiteNoise, so it cannot serve ``/static`` on
   its own. The compose file therefore runs Django's development server with
-  ``DEBUG`` from ``.ddev/mailman/settings_local.py``. Use a real reverse proxy
+  ``DEBUG`` from a local settings module next to it. Use a real reverse proxy
   (that is what the ``maxking/mailman-web`` image adds) for anything but local
   use.
 * Its ``settings.py`` calls ``gethostbyname("mailman-web")`` while building

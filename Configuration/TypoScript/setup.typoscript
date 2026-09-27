@@ -13,9 +13,8 @@
 # child "20" and calls that child from its template with
 # `<f:cObject typoscriptObjectPath="tt_content.{data.CType}.20" data="{data}"
 # table="tt_content"/>`, the way the core does it in
-# EXT:fluid_styled_content/Resources/Private/Templates/Generic.fluid.html. The
-# Forum Wissen site package does that, so the newsletter block of the start page
-# looks like the live site.
+# EXT:fluid_styled_content/Resources/Private/Templates/Generic.fluid.html. That
+# way a newsletter block of the start page can look like the rest of the site.
 #
 # templateName is intentionally empty so Extbase resolves the template from the
 # controller and action, which finds Resources/Private/Templates/Subscribe/
