@@ -141,6 +141,16 @@ class MailmanService
         }
 
         return match (true) {
+            // A 404 whose body is not JSON does not come from Mailman: its REST
+            // API always answers with JSON, even for an unknown path. A web
+            // server that does not know /3.0 (a Mailman 2 host, a wrong port, a
+            // proxy) returns its own HTML error page instead, and reporting
+            // "list does not exist" would send the editor looking at the list
+            // configuration while the apiUrl is the actual problem.
+            $httpCode === 404 && !$this->isJson($response) => [
+                'success' => false,
+                'messageKey' => 'error.noRestApi',
+            ],
             $httpCode === 200, $httpCode === 201 => ['success' => true],
             $httpCode === 409 => ['success' => false, 'messageKey' => 'error.alreadySubscribed'],
             $httpCode === 401, $httpCode === 403 => ['success' => false, 'messageKey' => 'error.notAuthorized'],
@@ -207,5 +217,19 @@ class MailmanService
             }
         }
         return substr($response, 0, 200);
+    }
+
+    /**
+     * Whether the body is a JSON object or array, i.e. whether it came from the
+     * Mailman REST API. An empty body counts as JSON: that is Mailman's answer
+     * to a successful POST, where only the status code carries the meaning.
+     */
+    protected function isJson(string $response): bool
+    {
+        if (trim($response) === '') {
+            return true;
+        }
+
+        return is_array(json_decode($response, true));
     }
 }

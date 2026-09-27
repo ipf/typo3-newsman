@@ -125,6 +125,69 @@ its child ``20`` and calls that child from its template:
 template calls the child the way the core does it in
 ``EXT:fluid_styled_content/Resources/Private/Templates/Generic.fluid.html``.
 
+.. _usage-bot-protection:
+
+Bot protection (optional)
+=========================
+
+The form subscribes whoever submits it, so an open form is also an invitation to
+spam: a bot can put arbitrary third-party addresses into the list. The extension
+has no captcha of its own, because a good one is a solved problem and both
+candidates need configuration a site owns anyway.
+
+`subugoe/typo3-cap <https://github.com/subugoe/typo3-cap>`_ is the recommended
+addition. It is a PSR-15 middleware that asks for a
+`proof of work <https://capjs.org/guide/>`_ before a request to a protected path
+is answered, so the extension needs no field, no template change and no code —
+installing it is enough.
+
+.. code-block:: bash
+
+   composer require subugoe/typo3-cap
+
+Cap protects **paths**, and the form posts to the page it is rendered on, so
+that path is the unit of protection. Put the signup element on a page of its
+own and protect that page, otherwise the proof is required for the whole site:
+
+.. code-block:: typoscript
+
+   tx_typo3cap {
+     enabled = 1
+     siteKey = your-site-key
+     serviceUrl = http://cap:3000
+     protectedPaths = /newsletter/
+   }
+
+These are Page TSconfig settings of the site root (page properties → Resources
+→ Page TSconfig); the same keys work as environment variables (``CAP_ENABLED``,
+``CAP_SITE_KEY``, ``CAP_SECRET_KEY``, ``CAP_SERVICE_URL``,
+``CAP_PROTECTED_PATHS``), which take effect when no Page TSconfig value is set.
+``serviceUrl`` has to be reachable from PHP, while browsers talk to Cap through
+the same-origin proxy of the extension, so the Cap server does not need a public
+address.
+
+``protectedPaths`` also takes ``#``-delimited PCRE expressions, which is the way
+to protect a single page among several that share a path prefix:
+
+.. code-block:: typoscript
+
+   protectedPaths = #/newsletter-signup.*#
+
+Two things to know before enabling it:
+
+* The first visit to a protected page briefly shows a loading page while the
+  proof is solved; every page rendered afterwards prepares the next proof in
+  the background.
+* Cap consumes a proof once and then continues the navigation for about ten
+  seconds, during which one repeated ``GET`` and a few redirects are allowed.
+  Duplicate ``POST`` submissions stay rejected, so a visitor who submits the
+  form twice has to solve a new proof. The extension itself has no
+  application-level idempotency for the same reason.
+
+The package requires TYPO3 12.4 or 13.4. On TYPO3 14 it cannot be installed, so
+it is listed under ``suggest`` in ``composer.json`` rather than required; the
+form keeps working unprotected there.
+
 .. _usage-multiple-lists:
 
 Several lists on one site

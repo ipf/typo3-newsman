@@ -50,6 +50,9 @@
             <trans-unit id="error.listNotFound">
                 <source>The mailing list does not exist. Please contact the site operator.</source>
             </trans-unit>
+            <trans-unit id="error.noRestApi">
+                <source>The mailing list server offers no Mailman 3 REST API at the configured address. Please contact the site operator.</source>
+            </trans-unit>
             <trans-unit id="error.rejected">
                 <source>The mailing list server did not accept the address.</source>
             </trans-unit>

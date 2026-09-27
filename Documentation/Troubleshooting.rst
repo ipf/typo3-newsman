@@ -43,6 +43,26 @@ address (``newsletter@example.com``) and the list id
 (``newsletter.example.com``, optionally ``list:newsletter.example.com``) are
 accepted; the domain of the list must match the domain Mailman knows.
 
+The server offers no Mailman 3 REST API
+========================================
+
+``error.noRestApi`` means the answer to ``apiUrl`` was not the Mailman REST API.
+The service answers with that key when ``apiUrl`` returns a ``404`` whose body
+is not JSON, because the Mailman API answers with JSON even for an unknown path.
+The usual cause is a Mailman **2** host: its web interface is a different
+application and it has no REST API at all, so ``/3.0/members`` does not exist.
+
+* A hosted or shared list server (rather than a self-hosted Mailman 3) usually
+  offers no REST API, and no REST account with the admin role either. Even with
+  an API, subscribing with ``pre_verified``, ``pre_confirmed`` and
+  ``pre_approved`` set bypasses confirmation and moderation, which such a server
+  does not allow.
+* Check the URL: ``apiUrl`` is the base of the API, ``https://host/3.0``, not
+  the address of the list page.
+* For a Mailman 2 host, switch to ``mode = email``. It sends the confirmation
+  mail to ``<list>-subscribe@<domain>`` instead, and the visitor confirms with
+  the list server itself; see :ref:`configuration-modes`.
+
 Mailman is not reachable
 ========================
 
@@ -83,6 +103,15 @@ A visitor is subscribed without confirming
 
 This is the default: ``pre_verified``, ``pre_confirmed`` and ``pre_approved``
 are sent as ``"true"``. See :ref:`opt-in` for the double opt-in flow.
+
+Spam subscriptions appear in the list
+======================================
+
+A visitor of the form can put any third-party address into the mailing list, so
+an unprotected form attracts bot subscriptions. Install ``subugoe/typo3-cap`` and
+protect the path of the page the form is on; see :ref:`usage-bot-protection`.
+Bots that got through before it was installed are ordinary members and are
+removed in Mailman (or Postorius), or with ``DELETE /3.0/members/<member_id>``.
 
 The page cache serves a stale message
 =====================================

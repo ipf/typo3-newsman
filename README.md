@@ -176,6 +176,7 @@ ever rendered inside a page.
 | Invalid address | Validation error, nothing sent |
 | Mailman unreachable | Connection error, no silent failure |
 | Unknown list | Points the editor at the list configuration |
+| No REST API at `apiUrl` | Points the operator at `apiUrl`, not at the list |
 | `apiUrl` empty | "not configured" hint |
 
 Mailman's REST API expects the `pre_*` flags as **strings**; real JSON booleans
@@ -238,6 +239,10 @@ to run behind a reverse proxy:
 - Form input is only used to call the Mailman API, nothing is persisted.
 - TLS is verified by default; `verifySsl` should stay enabled in production.
 - Credentials come from the environment, not from versioned files.
+- The form has no captcha, so an open form lets bots subscribe third-party
+  addresses. `subugoe/typo3-cap` is an optional dependency that puts a
+  proof-of-work challenge in front of the page the form posts to
+  ([details](Documentation/Usage.rst)).
 
 ## Deprecation-free notes
 

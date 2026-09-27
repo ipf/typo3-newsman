@@ -150,6 +150,9 @@ All messages live in ``Resources/Private/Language/locallang.xlf``:
      - The content element has no list configured
    * - ``error.listNotFound``
      - Mailman does not know the list
+   * - ``error.noRestApi``
+     - The answer to ``apiUrl`` is not the Mailman 3 REST API, e.g. a Mailman 2
+       host or a wrong port
    * - ``error.alreadySubscribed``
      - The address is already a member
    * - ``error.notAuthorized``

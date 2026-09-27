@@ -12,6 +12,9 @@
     "require-dev": {
         "typo3/testing-framework": "^8.0 || ^9.0"
     },
+    "suggest": {
+        "subugoe/typo3-cap": "Protects the signup form against bots with a proof-of-work challenge (TYPO3 12.4/13.4, path based), see Documentation/Usage.rst"
+    },
     "autoload": {
         "psr-4": {
             "Ipf\\NewsMan\\": "Classes/"
