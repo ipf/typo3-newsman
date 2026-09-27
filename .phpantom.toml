@@ -1,0 +1,32 @@
+# PHPantom language server, the PHP language server used while working on this
+# package: https://github.com/PHPantom-dev/phpantom_lsp
+#
+# The file is optional, every setting below is the default unless the comment
+# says otherwise. It lives next to composer.json, so an editor has to be opened
+# on the package itself to pick it up; inside a site project the site's own
+# configuration applies.
+"$schema" = "https://raw.githubusercontent.com/PHPantom-dev/phpantom_lsp/main/config-schema.json"
+
+[php]
+# composer.json requires ">=8.1", which is the version the code is written
+# against. It is pinned rather than left to the detection, so the diagnostics do
+# not change with the PHP version of the machine that happens to be used.
+version = "8.1"
+
+[diagnostics]
+# The whole extension is two classes, so the project-wide sweep costs nothing
+# and reports problems in the file that is not open in the editor.
+workspace = true
+
+# Off by default anyway, and explicitly off here: the Fluid templates and the
+# Extbase base controller are reached through magic, so member access on an
+# unresolved subject would be noise rather than a finding.
+unresolved-member-access = false
+
+[indexing]
+# Default. Kept explicit because a language server that cannot resolve a class
+# reports nothing at all, and that is the failure mode worth ruling out here:
+# the two classes are PSR-4 autoloadable and nothing outside Classes/ contains
+# PHP.
+strategy = "full"
+exclude = ["ddev/"]

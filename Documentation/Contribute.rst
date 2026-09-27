@@ -21,6 +21,43 @@ Workflow
 #. Open a pull request that describes the behaviour change and references the
    issue.
 
+.. _contribute-language-server:
+
+Language server
+===============
+
+Editing happens with `PHPantom <https://github.com/PHPantom-dev/phpantom_lsp>`_,
+a standalone language server that needs neither PHP nor Node at runtime. It is
+configured by ``.phpantom.toml`` in the package root, which pins the PHP version
+to the ``>=8.1`` from ``composer.json`` and switches on the project-wide
+diagnostics, so a problem is reported in the file that is not open as well.
+
+.. code-block:: bash
+
+   phpantom_lsp analyze
+   phpantom_lsp analyze Classes/ --severity error
+
+In an editor it is an ordinary language server; Neovim drives it with the
+built-in client, without a plugin:
+
+.. code-block:: lua
+
+   vim.lsp.config['phpantom'] = {
+     cmd = { 'phpantom_lsp' },
+     filetypes = { 'php' },
+     root_markers = { 'composer.json', '.git' },
+   }
+   vim.lsp.enable('phpantom')
+
+``analyze`` doubles as a CI gate: it is a single binary, reports unresolved
+symbols in a PHPStan-style table and needs neither a baseline nor a level.
+
+What it does not do is reason about types. It reports whether a class, a member
+or an argument count exists — a language server that cannot resolve a symbol
+reports nothing, so its silence is about resolution, not correctness. Type
+analysis stays with PHPStan or Psalm, which PHPantom proxies automatically once
+one of them is in ``require-dev`` with its own configuration file.
+
 Conventions
 ===========
 
@@ -34,6 +71,8 @@ Conventions
   :ref:`reference`.
 * Changes of the REST payload are tested against a real Mailman 3, because the
   validator reacts to the types of the ``pre_*`` flags.
+* No magic calls that PHPantom cannot resolve: constructor injection keeps the
+  types visible, which is also what makes them checkable.
 
 Documentation
 =============
