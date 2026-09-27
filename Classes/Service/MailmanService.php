@@ -127,8 +127,15 @@ class MailmanService
             ];
         }
 
+        // curl_exec() is typed string|false, and the guard above has already
+        // returned for false, so the cast is a no-op at runtime. It is here
+        // because that is the only thing the static analysis accepts: it does not
+        // narrow the type across the early return, and neither a reassignment nor
+        // a ternary helps. Without the cast every use below carries string|false.
+        $body = (string) $response;
+
         if ($httpCode === 400 || $httpCode === 422) {
-            $detail = $this->extractDetail($response);
+            $detail = $this->extractDetail($body);
             // Mailman reports an unknown list as 400 "No such list" rather than
             // 404, so the message is inspected to keep the hint useful.
             return [
@@ -147,7 +154,7 @@ class MailmanService
             // proxy) returns its own HTML error page instead, and reporting
             // "list does not exist" would send the editor looking at the list
             // configuration while the apiUrl is the actual problem.
-            $httpCode === 404 && !$this->isJson($response) => [
+            $httpCode === 404 && !$this->isJson($body) => [
                 'success' => false,
                 'messageKey' => 'error.noRestApi',
             ],
@@ -158,7 +165,7 @@ class MailmanService
             default => [
                 'success' => false,
                 'messageKey' => 'error.unknown',
-                'message' => 'HTTP ' . $httpCode . ' ' . $this->extractDetail($response),
+                'message' => 'HTTP ' . $httpCode . ' ' . $this->extractDetail($body),
             ],
         };
     }
