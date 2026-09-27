@@ -1,0 +1,69 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<T3DataStructure>
+    <sheets>
+        <sDEF>
+            <ROOT>
+                <TCEforms>
+                    <sheetTitle>LLL:EXT:newsman/Resources/Private/Language/locallang.xlf:flexform.sheet_general</sheetTitle>
+                </TCEforms>
+                <type>array</type>
+                <el>
+                    <settings.list>
+                        <TCEforms>
+                            <label>LLL:EXT:newsman/Resources/Private/Language/locallang.xlf:flexform.list</label>
+                            <config>
+                                <type>input</type>
+                                <size>50</size>
+                                <eval>trim,required</eval>
+                                <placeholder>newsman@example.com</placeholder>
+                            </config>
+                        </TCEforms>
+                    </settings.list>
+                    <settings.successMessage>
+                        <TCEforms>
+                            <label>LLL:EXT:newsman/Resources/Private/Language/locallang.xlf:flexform.successMessage</label>
+                            <config>
+                                <type>text</type>
+                                <cols>40</cols>
+                                <rows>3</rows>
+                            </config>
+                        </TCEforms>
+                    </settings.successMessage>
+                    <!-- The texts of the form. The live site shows the block of
+                         its own mail service, whose texts are not part of the
+                         public API, so they are settings of the element. -->
+                    <settings.emailLabel>
+                        <TCEforms>
+                            <label>LLL:EXT:newsman/Resources/Private/Language/locallang.xlf:flexform.emailLabel</label>
+                            <config>
+                                <type>input</type>
+                                <size>40</size>
+                                <default>E-Mail-Adresse *</default>
+                            </config>
+                        </TCEforms>
+                    </settings.emailLabel>
+                    <settings.emailPlaceholder>
+                        <TCEforms>
+                            <label>LLL:EXT:newsman/Resources/Private/Language/locallang.xlf:flexform.emailPlaceholder</label>
+                            <config>
+                                <type>input</type>
+                                <size>40</size>
+                                <default>E-Mail-Adresse *</default>
+                            </config>
+                        </TCEforms>
+                    </settings.emailPlaceholder>
+                    <settings.buttonLabel>
+                        <TCEforms>
+                            <label>LLL:EXT:newsman/Resources/Private/Language/locallang.xlf:flexform.buttonLabel</label>
+                            <config>
+                                <type>input</type>
+                                <size>40</size>
+                                <default>Newsletter abonnieren</default>
+                            </config>
+                        </TCEforms>
+                    </settings.buttonLabel>
+                </el>
+            </ROOT>
+        </sDEF>
+    </sheets>
+</T3DataStructure>

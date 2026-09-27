@@ -1,0 +1,81 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<xliff version="1.2" xmlns="urn:oasis:names:tc:xliff:document:1.2">
+    <file source-language="en" datatype="plaintext" original="EXT:newsman/Resources/Private/Language/locallang.xlf" date="2026-09-27T00:00:00Z" product-name="newsman">
+        <header/>
+        <body>
+            <trans-unit id="plugin.subscribe">
+                <source>Newsman Subscribe</source>
+            </trans-unit>
+            <trans-unit id="plugin.description">
+                <source>Subscribe to a Mailman mailing list by email address.</source>
+            </trans-unit>
+            <trans-unit id="label.email">
+                <source>Email address</source>
+            </trans-unit>
+            <trans-unit id="label.subscribe">
+                <source>Subscribe</source>
+            </trans-unit>
+            <trans-unit id="placeholder.email">
+                <source>your.email@example.com</source>
+            </trans-unit>
+
+            <trans-unit id="success.default">
+                <source>Thank you for subscribing! Your address is now on the mailing list.</source>
+            </trans-unit>
+            <trans-unit id="success.confirmationPending">
+                <source>Almost done - please check your inbox and confirm your subscription.</source>
+            </trans-unit>
+
+            <trans-unit id="error.unknown">
+                <source>An error occurred. Please try again later.</source>
+            </trans-unit>
+            <trans-unit id="error.invalidEmail">
+                <source>Please enter a valid email address.</source>
+            </trans-unit>
+            <trans-unit id="error.missingList">
+                <source>No mailing list configured for this element. Please contact the site operator.</source>
+            </trans-unit>
+            <trans-unit id="error.notConfigured">
+                <source>The mailing list server is not configured. Please contact the site operator.</source>
+            </trans-unit>
+            <trans-unit id="error.connection">
+                <source>The mailing list server could not be reached. Please try again later.</source>
+            </trans-unit>
+            <trans-unit id="error.alreadySubscribed">
+                <source>This email address is already subscribed to the mailing list.</source>
+            </trans-unit>
+            <trans-unit id="error.notAuthorized">
+                <source>The mailing list server rejected the request. Please contact the site operator.</source>
+            </trans-unit>
+            <trans-unit id="error.listNotFound">
+                <source>The mailing list does not exist. Please contact the site operator.</source>
+            </trans-unit>
+            <trans-unit id="error.rejected">
+                <source>The mailing list server did not accept the address.</source>
+            </trans-unit>
+            <trans-unit id="error.mailFailed">
+                <source>The confirmation email could not be sent. Please try again later.</source>
+            </trans-unit>
+
+            <trans-unit id="flexform.sheet_general">
+                <source>General</source>
+            </trans-unit>
+            <trans-unit id="flexform.list">
+                <source>Mailing list (e.g. newsletter@example.com)</source>
+            </trans-unit>
+            <trans-unit id="flexform.successMessage">
+                <source>Success message</source>
+            </trans-unit>
+            <trans-unit id="flexform.emailLabel">
+                <source>Label of the email field</source>
+            </trans-unit>
+            <trans-unit id="flexform.emailPlaceholder">
+                <source>Placeholder of the email field</source>
+            </trans-unit>
+            <trans-unit id="flexform.buttonLabel">
+                <source>Label of the submit button</source>
+            </trans-unit>
+
+        </body>
+    </file>
+</xliff>

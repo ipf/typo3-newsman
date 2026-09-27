@@ -1,0 +1,53 @@
+/*
+ * The extension brings the form and its messages, the design of the page around
+ * it comes from the site package: the classes are styled there, e.g. in
+ * Resources/Public/Css/fowi.css of the Forum Wissen site package.
+ */
+
+.newsman-subscribe__form {
+    margin: 0;
+}
+
+/* The label of the field is only read out, the field shows a placeholder, so
+   the label is hidden visually and stays available to a screen reader. */
+.newsman-subscribe__label {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    padding: 0;
+    margin: -1px;
+    overflow: hidden;
+    clip: rect(0, 0, 0, 0);
+    white-space: nowrap;
+    border: 0;
+}
+
+.newsman-subscribe__field {
+    margin: 0 0 1em;
+}
+
+.newsman-subscribe__input {
+    display: block;
+    box-sizing: border-box;
+    width: 100%;
+    max-width: 100%;
+}
+
+.newsman-subscribe__submit {
+    display: block;
+    box-sizing: border-box;
+    width: 100%;
+    cursor: pointer;
+}
+
+.newsman-subscribe__message {
+    margin: 0 0 1em;
+}
+
+.newsman-subscribe__message--error {
+    color: #a91315;
+}
+
+.newsman-subscribe__message--success {
+    color: #1c7c3c;
+}

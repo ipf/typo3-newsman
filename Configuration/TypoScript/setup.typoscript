@@ -1,0 +1,28 @@
+# Frontend rendering of the "newsman_subscribe" content element.
+#
+# The plugin is rendered as EXTBASEPLUGIN instead of the
+# `=< lib.contentElement` + `20 = EXTBASEPLUGIN` pair that
+# ExtensionUtility::configurePlugin() generates. That pair only works when
+# lib.contentElement is a COA: as soon as a site package redefines
+# lib.contentElement as a FLUIDTEMPLATE, the numbered child is dropped and the
+# element renders empty. Putting the object here instead also keeps it visible
+# to site packages, which can override it.
+#
+# A site package that wants to put its own texts and design around the form
+# overrides this object with a FLUIDTEMPLATE again, keeps the plugin as its
+# child "20" and calls that child from its template with
+# `<f:cObject typoscriptObjectPath="tt_content.{data.CType}.20" data="{data}"
+# table="tt_content"/>`, the way the core does it in
+# EXT:fluid_styled_content/Resources/Private/Templates/Generic.fluid.html. The
+# Forum Wissen site package does that, so the newsletter block of the start page
+# looks like the live site.
+#
+# templateName is intentionally empty so Extbase resolves the template from the
+# controller and action, which finds Resources/Private/Templates/Subscribe/
+# Subscribe.html. A hard-coded name would break as soon as the file is renamed.
+tt_content.newsman_subscribe = EXTBASEPLUGIN
+tt_content.newsman_subscribe {
+  extensionName = Newsman
+  pluginName = Subscribe
+  templateName =
+}

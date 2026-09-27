@@ -1,0 +1,33 @@
+# Extension configuration of ext:newsman.
+#
+# This file declares the settings the extension understands. The install tool
+# uses it to create and keep up to date
+# $GLOBALS['TYPO3_CONF_VARS']['EXTENSIONS']['newsman'], and values set there are
+# merged with the ones from config/system/settings.php.
+#
+# It replaces the ext_emconf.php $EM_CONF['constraints'] block, which is
+# deprecated for composer packages (TYPO3 deprecation 108345): the package
+# metadata and constraints live in composer.json instead.
+
+# rest = Mailman 3 REST API (recommended), email = Mailman 2 style confirmation
+# mail to <list>-subscribe@<domain>.
+mode = rest
+
+# Base URL of the Mailman REST API, e.g. https://mailman.example.com/3.0
+apiUrl =
+
+# Basic auth credentials of the REST user. It needs the Mailman admin role.
+apiUser =
+apiPassword =
+
+# Alternative to user/password, takes precedence when set.
+authToken =
+
+# TLS certificate validation. Only turn off for a self-signed dev instance.
+verifySsl = 1
+
+# HTTP timeout in seconds.
+timeout = 10
+
+# Only for mode = email: the list domain, e.g. example.com
+emailDomain =

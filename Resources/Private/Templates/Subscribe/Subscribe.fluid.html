@@ -1,0 +1,62 @@
+<html xmlns:f="http://typo3.org/ns/TYPO3/CMS/Fluid/ViewHelpers" data-namespace-typo3-fluid="true">
+
+<f:comment>
+    The stylesheet of the form is loaded by the template: TYPO3 v14 has no
+    configureExtension() any more, and the form is only ever rendered inside a
+    page, where the asset is collected with the page.
+
+    The message is rendered here rather than with f:flashMessages: the controller
+    hands over a label key, and LanguageService is no longer available as a DI
+    service since TYPO3 v13.
+
+    newsmanMessage holds editor text (a FlexForm success message wins), so it is
+    not passed through f:translate; newsmanMessageKey is a label that is.
+
+    The texts of the field and of the button are plain texts of the FlexForm, not
+    labels: the site of this package brings its own wording, and an inline
+    f:if with a f:translate inside would have to be repeated in every attribute.
+    They are written into the view, not escaped again by an f:variable, because a
+    ViewHelper inside the inline content of an f:variable produces no output.
+</f:comment>
+
+<f:asset.css identifier="newsman" href="EXT:newsman/Resources/Public/Css/newsman.css"/>
+
+<f:if condition="{newsmanMessageKey}">
+    <p class="newsman-subscribe__message newsman-subscribe__message--error" role="alert">
+        <f:translate key="{newsmanMessageKey}"/>
+    </p>
+</f:if>
+<f:if condition="{newsmanMessage}">
+    <p class="newsman-subscribe__message newsman-subscribe__message--success" role="status">
+        <f:if condition="{newsmanMessage -> f:startsWith('LLL:')}">
+            <f:then><f:translate key="{newsmanMessage}"/></f:then>
+            <f:else>{newsmanMessage}</f:else>
+        </f:if>
+    </p>
+</f:if>
+
+<div class="newsman-subscribe">
+    <f:comment>
+        The name is what puts the fields into the plugin namespace: without it
+        the input is posted as plain "email" and the controller never sees it,
+        because Extbase only reads arguments of tx_newsman_subscribe.
+    </f:comment>
+    <f:form name="tx_newsman_subscribe" action="subscribe" pluginName="Subscribe" method="post" class="newsman-subscribe__form">
+        <div class="newsman-subscribe__field">
+            <label class="newsman-subscribe__label" for="newsman-email">{settings.emailLabel}</label>
+            <f:form.textfield
+                id="newsman-email"
+                name="email"
+                type="email"
+                required="true"
+                autocomplete="email"
+                class="newsman-subscribe__input"
+                aria-label="{settings.emailLabel}"
+                placeholder="{settings.emailPlaceholder}"
+            />
+        </div>
+        <button type="submit" class="newsman-subscribe__submit">{settings.buttonLabel}</button>
+    </f:form>
+</div>
+
+</html>
