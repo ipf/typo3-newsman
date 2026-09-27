@@ -7,6 +7,7 @@ visitors to a remote GNU Mailman 3 mailing list.
 - Namespace: `Ipf\NewsMan\`
 - Package: `ipf/newsman`
 - Supports **TYPO3 13.4 and 14.x**
+- Full documentation: [`Documentation/`](Documentation/Index.rst) (reStructuredText, TYPO3 Sphinx tooling)
 
 The extension is standalone: it ships its own content element, FlexForm,
 template and CSS, and stores nothing in the TYPO3 database. Mailman remains the
